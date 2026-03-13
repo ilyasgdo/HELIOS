@@ -1,0 +1,51 @@
+# =====================================
+# HELIOS — .gitignore
+# =====================================
+
+# --- Secrets (JAMAIS committer) ---
+.env
+*.env
+.env.*
+!.env.example
+
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+venv/
+.venv/
+env/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+*.log
+
+# --- Node / Frontend ---
+node_modules/
+dist/
+.cache/
+*.local
+
+# --- Base de données ---
+*.db
+*.sqlite
+*.sqlite3
+
+# --- IDEs ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Cesium (assets lourds générés) ---
+frontend/public/cesium/
