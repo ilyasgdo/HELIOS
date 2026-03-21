@@ -7,7 +7,7 @@ const LAYERS = [
   { key: 'seismic',   icon: '⚡',  label: 'Séismes',   color: '#ffaa00' },
   { key: 'news',      icon: '📰',  label: 'News',      color: '#4488ff' },
   { key: 'finance',   icon: '💹',  label: 'Marchés',   color: '#00ff88' },
-  { key: 'orbital',   icon: '🛸',  label: 'Satellites', color: '#aa88ff' },
+  { key: 'cctv',      icon: '📷',  label: 'CCTV',      color: '#00ffcc' },
 ]
 
 export default function LayerToolbar() {

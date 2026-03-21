@@ -15,7 +15,7 @@ export const useGlobeStore = create((set) => ({
     news: false,
     macro: false,
     orbital: false,
-    cctv: false,
+    cctv: true, // activé par défaut pour le test
     seismic: false,
   },
   toggleLayer: (layerName) =>
@@ -31,9 +31,11 @@ export const useGlobeStore = create((set) => ({
   newsData: [],
   financeData: [],
   seismicData: [],
+  cctvData: [],
 
   updateAviationData: (data) => set({ aviationData: data }),
   updateNewsData: (data) => set({ newsData: data }),
   updateFinanceData: (data) => set({ financeData: data }),
   updateSeismicData: (data) => set({ seismicData: data }),
+  updateCctvData: (data) => set({ cctvData: data }),
 }))

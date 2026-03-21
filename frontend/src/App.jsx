@@ -4,7 +4,8 @@ import Globe from './components/Globe/Globe'
 import Header from './components/Header/Header'
 import PanelContainer from './components/Panels/PanelContainer'
 import AlertBanner from './components/Alerts/AlertBanner'
-import CCTVGrid from './components/CCTV/CCTVGrid'
+import AlertsPanel from './components/Alerts/AlertsPanel'
+import CctvPlayerPanel from './components/CCTV/CctvPlayerPanel'
 import { useWebSocket } from './hooks/useWebSocket'
 import { useGlobeData } from './hooks/useGlobeData'
 import { usePanelStore } from './stores/panelStore'
@@ -32,14 +33,11 @@ function AppContent() {
         <>
           <Header />
           <AlertBanner />
+          <AlertsPanel />
+          <CctvPlayerPanel />
 
-          {/* Panel classique (News, Finance, Alertes) */}
-          {activePanel && activePanel !== 'cctv' && <PanelContainer />}
-
-          {/* Panel CCTV full-width */}
-          {activePanel === 'cctv' && (
-            <CCTVGrid onClose={closePanel} />
-          )}
+          {/* Panel classique (News, Finance) */}
+          {activePanel && !['cctv', 'alerts'].includes(activePanel) && <PanelContainer />}
         </>
       )}
     </div>

@@ -8,6 +8,7 @@ import { ConflictZonesLayer } from './layers/ConflictZonesLayer'
 import { SeismicLayer } from './layers/SeismicLayer'
 import { NewsHotspotsLayer } from './layers/NewsHotspotsLayer'
 import { FinanceLayer } from './layers/FinanceLayer'
+import { CctvLayer } from './layers/CctvLayer'
 import styles from './Globe.module.css'
 
 const CESIUM_TOKEN = import.meta.env.VITE_CESIUM_TOKEN
@@ -24,6 +25,7 @@ export default function Globe() {
     newsData,
     financeData,
     seismicData,
+    cctvData,
   } = useGlobeStore()
 
   // ── Init CesiumJS ──────────────────────────────────────────────
@@ -101,15 +103,36 @@ export default function Globe() {
         seismic:   new SeismicLayer(viewer),
         news:      new NewsHotspotsLayer(viewer),
         finance:   new FinanceLayer(viewer),
+        cctv:      new CctvLayer(viewer),
       }
     } catch (err) {
       console.error('[Globe] Layers init failed:', err)
     }
 
+    // ── Gérer les clics sur les entités du globe ──
+    const handler = new CesiumLib.ScreenSpaceEventHandler(viewer.scene.canvas)
+    handler.setInputAction((click) => {
+      const picked = viewer.scene.pick(click.position)
+      if (CesiumLib.defined(picked) && picked.id) {
+        const entity = picked.id
+        if (entity.properties && entity.properties.type) {
+          const type = entity.properties.type.getValue()
+          if (type === 'cctv') {
+             const camData = entity.properties.camData.getValue()
+             // Appel Zustand Store via getState() car nous sommes dans un useEffect natif DOM
+             import('../../stores/panelStore').then(module => {
+               module.usePanelStore.getState().openCctvPlayer(camData)
+             })
+          }
+        }
+      }
+    }, CesiumLib.ScreenSpaceEventType.LEFT_CLICK)
+
     viewerRef.current = viewer
     setViewer(viewer)
 
     return () => {
+      handler.destroy()
       Object.values(layersRef.current).forEach((layer) => {
         try { layer.destroy() } catch { /* ignore */ }
       })
@@ -120,12 +143,13 @@ export default function Globe() {
 
   // ── Toggle visibilité des couches ─────────────────────────────
   useEffect(() => {
-    const { aviation, conflicts, seismic, news, finance } = layersRef.current
+    const { aviation, conflicts, seismic, news, finance, cctv } = layersRef.current
     aviation?.setVisible(activeLayers.aviation)
     conflicts?.setVisible(activeLayers.conflicts)
     seismic?.setVisible(activeLayers.seismic)
     news?.setVisible(activeLayers.news)
     finance?.setVisible(activeLayers.finance)
+    cctv?.setVisible(activeLayers.cctv)
   }, [activeLayers])
 
   // ── Mise à jour données → couches ─────────────────────────────
@@ -148,6 +172,11 @@ export default function Globe() {
     if (activeLayers.finance && financeData.length > 0)
       layersRef.current.finance?.update(financeData)
   }, [financeData, activeLayers.finance])
+
+  useEffect(() => {
+    if (activeLayers.cctv && cctvData && cctvData.length > 0)
+      layersRef.current.cctv?.update(cctvData)
+  }, [cctvData, activeLayers.cctv])
 
   return (
     <>

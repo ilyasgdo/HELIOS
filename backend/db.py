@@ -5,6 +5,9 @@ from typing import Optional
 
 from sqlmodel import SQLModel, Field, create_engine, Session, select
 
+# Imports des modèles pour enregistrement SQLAlchemy Base
+import models.alert
+
 logger = logging.getLogger(__name__)
 
 DATABASE_URL = f"sqlite:///{os.getenv('DATABASE_URL', './helios.db')}"

@@ -26,7 +26,7 @@ INDICES = {
 async def fetch_global_markets() -> list:
     """Récupère les cours des principaux indices mondiaux via Finnhub."""
     if not API_KEY:
-        logger.warning("FINNHUB_API_KEY non défini, retour liste vide")
+        logger.warning("FINNHUB_API_KEY non défini, impossible de récupérer les données financières.")
         return []
 
     results = []
@@ -50,10 +50,12 @@ async def fetch_global_markets() -> list:
                 })
             except Exception as exc:
                 logger.error("Finance %s error: %s", symbol, exc)
+    
+    if not results:
+        return []
 
-    logger.info("Finance: %d marchés récupérés", len(results))
+    logger.info("Finance: %d marchés récupérés en temps réel", len(results))
     return results
-
 
 @router.get("/markets")
 async def get_markets():

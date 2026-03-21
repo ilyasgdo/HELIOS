@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from db import init_db, get_session
 from websocket import manager
 from scheduler import HeliosScheduler
-from routes import aviation, news, finance, weather, cctv
+from routes import aviation, news, finance, weather, cctv, alerts, shodan
 
 load_dotenv()
 
@@ -39,6 +39,8 @@ app.include_router(news.router, prefix="/api/news", tags=["News"])
 app.include_router(finance.router, prefix="/api/finance", tags=["Finance"])
 app.include_router(weather.router, prefix="/api/weather", tags=["Weather"])
 app.include_router(cctv.router, prefix="/api/cctv", tags=["CCTV"])
+app.include_router(alerts.router, prefix="/api/alerts", tags=["Alerts"])
+app.include_router(shodan.router, prefix="/api/shodan", tags=["Shodan CCTV"])
 
 # Scheduler global
 _scheduler: HeliosScheduler | None = None
@@ -46,17 +48,14 @@ _scheduler: HeliosScheduler | None = None
 
 @app.get("/api/health", tags=["System"])
 async def health():
-    """Endpoint de santé du service."""
     return {"status": "ok", "service": "HELIOS", "version": "0.1.0"}
 
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    """WebSocket pour le streaming temps réel vers le frontend."""
     await manager.connect(websocket)
     try:
         while True:
-            # Garder la connexion ouverte
             await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket)

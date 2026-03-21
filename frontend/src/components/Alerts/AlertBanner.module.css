@@ -1,77 +1,68 @@
 .banner {
-  position: fixed;
-  top: 62px;
+  position: absolute;
+  top: 80px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  z-index: var(--z-alert);
+  gap: var(--space-xs);
+  z-index: 1000;
   pointer-events: all;
-  min-width: 480px;
-  max-width: 680px;
+  width: 90%;
+  max-width: 600px;
 }
 
 .alert {
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  background: rgba(5, 11, 24, 0.92);
+  
+  background: var(--color-surface);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--color-border);
   border-left: 4px solid;
   border-radius: var(--radius-md);
-  padding: 8px var(--space-md);
+  
+  padding: var(--space-sm) var(--space-md);
   cursor: pointer;
-  transition: transform var(--transition-fast), background var(--transition-fast);
+  transition: transform 0.2s, background 0.2s;
+  
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   text-align: left;
-  width: 100%;
-  animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  
+  animation: slideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .alert:hover {
-  background: rgba(13, 27, 46, 0.96);
-  transform: scale(1.01);
+  transform: scale(1.02);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-30px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .level {
-  font-family: var(--font-mono);
   font-size: 10px;
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-weight: 800;
   letter-spacing: 1px;
-  white-space: nowrap;
 }
 
 .title {
-  font-size: var(--text-sm);
+  font-size: 14px;
+  font-weight: 500;
   flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.locate {
-  font-size: var(--text-xs);
-  color: var(--color-accent);
+  overflow: hidden;
   white-space: nowrap;
 }
 
 .time {
-  font-size: var(--text-xs);
+  font-size: 12px;
   font-family: var(--font-mono);
   color: var(--color-text-muted);
-  white-space: nowrap;
 }

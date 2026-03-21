@@ -66,8 +66,24 @@ class HeliosScheduler:
             max_instances=1,
             replace_existing=True,
         )
+        # Shodan CCTV — toutes les 10 minutes (API lente/limitée)
+        self.scheduler.add_job(
+            self._broadcast_cctv,
+            IntervalTrigger(minutes=10),
+            id="shodan_cctv",
+            max_instances=1,
+            replace_existing=True,
+        )
         self.scheduler.start()
         logger.info("Scheduler HELIOS démarré.")
+
+    async def _broadcast_cctv(self) -> None:
+        try:
+            from routes.shodan import fetch_shodan_cctv
+            data = await fetch_shodan_cctv()
+            await self.ws.broadcast({"type": "cctv", "data": data})
+        except Exception as exc:
+            logger.error("Scheduler cctv error: %s", exc)
 
     async def _broadcast_aviation(self) -> None:
         try:
@@ -88,15 +104,23 @@ class HeliosScheduler:
     async def _broadcast_finance(self) -> None:
         try:
             from routes.finance import fetch_global_markets
+            from services.alert_engine import process_market_crash
             data = await fetch_global_markets()
             await self.ws.broadcast({"type": "finance", "data": data})
+            
+            # Détection d'alertes financières
+            await process_market_crash(data, self.ws)
         except Exception as exc:
             logger.error("Scheduler finance error: %s", exc)
 
     async def _broadcast_seismic(self) -> None:
         try:
             from routes.weather import fetch_earthquakes
+            from services.alert_engine import process_seismic_events
             data = await fetch_earthquakes()
             await self.ws.broadcast({"type": "seismic", "data": data})
+            
+            # Détection d'alertes sismiques
+            await process_seismic_events(data, self.ws)
         except Exception as exc:
             logger.error("Scheduler seismic error: %s", exc)

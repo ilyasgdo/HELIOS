@@ -4,58 +4,61 @@ export const useAlertsStore = create((set, get) => ({
   alerts: [],
   unreadCount: 0,
 
-  addAlerts: (newAlerts) =>
-    set((state) => {
-      const all = [...newAlerts, ...state.alerts].slice(0, 100)
-      const unread = all.filter((a) => !a.read).length
+  // Ajoute un tableau d'alertes au store (venant du WS ou du fetch initial)
+  addAlerts: (newAlerts) => set((state) => {
+    // Évite les doublons par ID
+    const existingIds = new Set(state.alerts.map(a => a.id))
+    const filteredNew = newAlerts.filter(a => !existingIds.has(a.id))
+    
+    if (filteredNew.length === 0) return state
 
-      // Notification browser si onglet inactif et alerte critique
-      if (
-        document.hidden &&
-        newAlerts.some((a) => a.level === 'CRITICAL') &&
-        'Notification' in window &&
-        Notification.permission === 'granted'
-      ) {
+    const all = [...filteredNew, ...state.alerts].slice(0, 100) // garde les 100 dernières
+    const unread = all.filter(a => !a.read).length
+    
+    // Notification browser si l'onglet est inactif et qu'il y a une alerte CRITICAL ou HIGH
+    if (document.hidden && filteredNew.some(a => a.level === 'CRITICAL' || a.level === 'HIGH')) {
+      try {
         new Notification('⚠️ HELIOS — Alerte Critique', {
-          body: newAlerts[0]?.title,
-          icon: '/favicon.svg',
+          body: filteredNew[0].title,
+          icon: '/vite.svg',
         })
+      } catch (e) {
+        console.warn('Notifications non autorisées', e)
       }
+    }
+    
+    return { alerts: all, unreadCount: unread }
+  }),
 
-      return { alerts: all, unreadCount: unread }
-    }),
+  // Appel async (vers l'API) pour marquer l'alerte comme lue en base + maj locale
+  markAsRead: async (alertId) => {
+    try {
+      await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/alerts/${alertId}/acknowledge`, {
+        method: 'POST'
+      })
+    } catch(e) { console.error('Erreur acknowledge api', e) }
 
-  addSeismicAlerts: (earthquakes) => {
-    const alerts = (earthquakes || [])
-      .filter((e) => e.magnitude >= 5)
-      .map((e) => ({
-        id: e.id,
-        level:
-          e.magnitude >= 7 ? 'CRITICAL' : e.magnitude >= 6 ? 'HIGH' : 'MEDIUM',
-        category: 'seismic',
-        title: `🔴 Séisme M${e.magnitude} — ${e.place}`,
-        description: `Profondeur: ${e.depth}km`,
-        latitude: e.latitude,
-        longitude: e.longitude,
-        url: e.url,
-        read: false,
-        timestamp: new Date().toISOString(),
-      }))
-
-    if (alerts.length > 0) get().addAlerts(alerts)
+    set((state) => {
+      const updated = state.alerts.map(a => a.id === alertId ? { ...a, read: true } : a)
+      const count = updated.filter(a => !a.read).length
+      return { alerts: updated, unreadCount: count }
+    })
   },
 
-  markAsRead: (alertId) =>
-    set((state) => ({
-      alerts: state.alerts.map((a) =>
-        a.id === alertId ? { ...a, read: true } : a,
-      ),
-      unreadCount: Math.max(0, state.unreadCount - 1),
-    })),
+  // Utilisé au chargement pour hydrater le store
+  fetchInitialAlerts: async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/alerts?limit=50`)
+      if (res.ok) {
+        const data = await res.json()
+        // On map "acknowledged" de la BDD vers "read" côté front
+        const mapped = data.map(a => ({ ...a, read: a.acknowledged, timestamp: a.created_at }))
+        get().addAlerts(mapped)
+      }
+    } catch(e) {
+      console.error('Erreur fetch initial alerts', e)
+    }
+  },
 
-  markAllRead: () =>
-    set((state) => ({
-      alerts: state.alerts.map((a) => ({ ...a, read: true })),
-      unreadCount: 0,
-    })),
+  clearAll: () => set({ alerts: [], unreadCount: 0 }),
 }))

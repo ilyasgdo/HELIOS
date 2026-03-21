@@ -73,6 +73,9 @@ function dispatch(message) {
       useGlobeStore.getState().updateSeismicData(message.data)
       useAlertsStore.getState().addSeismicAlerts(message.data)
       break
+    case 'cctv':
+      useGlobeStore.getState().updateCctvData(message.data)
+      break
     case 'alerts':
       useAlertsStore.getState().addAlerts(message.data)
       break
